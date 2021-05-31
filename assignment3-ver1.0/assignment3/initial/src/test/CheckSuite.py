@@ -6,12 +6,17 @@ from AST import *
 
 class CheckSuite(unittest.TestCase):
 
-    def test_0(self):
-        """Simple program: main"""
-        input = """Let x;
+    def test_var_redeclared(self):
+        input = """Let x; Let x;
         """
-        expect = "" #str(Undeclared(Function(), "foo"))
-        self.assertTrue(TestChecker.test(input, expect, 0))
+        expect = str(Redeclared(Variable(), "x"))
+        self.assertTrue(TestChecker.test(input, expect, 1))
+
+    def test_func_redeclared(self):
+        input = """Let x; Let x;
+        """
+        expect = str(Redeclared(Variable(), "x"))
+        self.assertTrue(TestChecker.test(input, expect, 2))
 
     # def test_undeclared_function(self):
     #     """Simple program: main"""
