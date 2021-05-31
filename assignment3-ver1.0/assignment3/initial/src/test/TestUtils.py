@@ -6,8 +6,8 @@ if not './main/csel/parser/' in sys.path:
 if os.path.isdir('../target/main/csel/parser') and not '../target/main/csel/parser/' in sys.path:
     sys.path.append('../target/main/csel/parser/')
 
-from BKITLexer import BKITLexer
-from BKITParser import BKITParser
+from CSELLexer import CSELLexer
+from CSELParser import CSELParser
 from lexererr import *
 from ASTGeneration import ASTGeneration
 from StaticCheck import StaticChecker
@@ -32,7 +32,7 @@ class TestLexer:
     def checkLexeme(input,expect,num):
         inputfile = TestUtil.makeSource(input,num)
         dest = open("./test/solutions/" + str(num) + ".txt","w")
-        lexer = BKITLexer(inputfile)
+        lexer = CSELLexer(inputfile)
         try:
             TestLexer.printLexeme(dest,lexer)
         except (ErrorToken,UncloseString,IllegalEscape) as err:
@@ -70,12 +70,12 @@ class TestParser:
     def checkParser(input,expect,num):
         inputfile = TestUtil.makeSource(input,num)
         dest = open("./test/solutions/" + str(num) + ".txt","w")
-        lexer = BKITLexer(inputfile)
+        lexer = CSELLexer(inputfile)
         listener = TestParser.createErrorListener()
 
         tokens = CommonTokenStream(lexer)
 
-        parser = BKITParser(tokens)
+        parser = CSELParser(tokens)
         parser.removeErrorListeners()
         parser.addErrorListener(listener)
         try:
@@ -96,9 +96,9 @@ class TestAST:
     def checkASTGen(input,expect,num):
         inputfile = TestUtil.makeSource(input,num)
         dest = open("./test/solutions/" + str(num) + ".txt","w")
-        lexer = BKITLexer(inputfile)
+        lexer = CSELLexer(inputfile)
         tokens = CommonTokenStream(lexer)
-        parser = BKITParser(tokens)
+        parser = CSELParser(tokens)
         tree = parser.program()
         asttree = ASTGeneration().visit(tree)
         dest.write(str(asttree))
@@ -111,9 +111,9 @@ class TestAST:
         #print("inutdir = "+inputdir)
         #print("outputdir = "+outputdir)
         dest = open(outputdir + "/" + str(num) + ".txt","w")
-        lexer = BKITLexer(FileStream(inputdir + "/" + str(num) + ".txt"))
+        lexer = CSELLexer(FileStream(inputdir + "/" + str(num) + ".txt"))
         tokens = CommonTokenStream(lexer)
-        parser = BKITParser(tokens)
+        parser = CSELParser(tokens)
         tree = parser.program()
         asttree = ASTGeneration().visit(tree)
         dest.write(str(asttree))
@@ -132,9 +132,9 @@ class TestChecker:
         
         if type(input) is str:
             inputfile = TestUtil.makeSource(input,num)
-            lexer = BKITLexer(inputfile)
+            lexer = CSELLexer(inputfile)
             tokens = CommonTokenStream(lexer)
-            parser = BKITParser(tokens)
+            parser = CSELParser(tokens)
             tree = parser.program()
             asttree = ASTGeneration().visit(tree)
         else:
@@ -160,9 +160,9 @@ class TestChecker:
         dest = open(outputdir + "/" + str(num) + ".txt","w")
         
         try:
-            lexer = BKITLexer(FileStream(inputdir + "/" + str(num) + ".txt"))
+            lexer = CSELLexer(FileStream(inputdir + "/" + str(num) + ".txt"))
             tokens = CommonTokenStream(lexer)
-            parser = BKITParser(tokens)
+            parser = CSELParser(tokens)
             tree = parser.program()
             asttree = ASTGeneration().visit(tree)
 

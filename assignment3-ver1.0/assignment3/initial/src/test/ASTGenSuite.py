@@ -5,8 +5,8 @@ from AST import *
 class ASTGenSuite(unittest.TestCase):
     def test_simple_program(self):
         """Simple program: int main() {} """
-        input = """Var:x;"""
-        expect = str(Program([VarDecl(Id("x"),[],None)]))
+        input = """Let x;"""
+        expect = str(Program([VarDecl(Id("x"),[],NoneType(),None)]))
         self.assertTrue(TestAST.checkASTGen(input,expect,300))
 
     
