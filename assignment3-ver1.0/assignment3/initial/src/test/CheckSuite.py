@@ -13,9 +13,9 @@ class CheckSuite(unittest.TestCase):
         self.assertTrue(TestChecker.test(input, expect, 1))
 
     def test_func_redeclared(self):
-        input = """Let x; Let x;
+        input = """Let x; Function x(){};
         """
-        expect = str(Redeclared(Variable(), "x"))
+        expect = str(Redeclared(Function(), "x"))
         self.assertTrue(TestChecker.test(input, expect, 2))
 
     # def test_undeclared_function(self):
