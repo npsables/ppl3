@@ -1,4 +1,0 @@
-
-        Function foo(b, b){} 
-        Function main(){} 
-        

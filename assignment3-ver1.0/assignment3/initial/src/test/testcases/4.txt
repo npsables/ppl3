@@ -1,2 +1,0 @@
-Constant $x2; Constant $x2;
-        
