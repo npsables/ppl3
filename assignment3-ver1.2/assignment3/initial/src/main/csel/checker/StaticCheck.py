@@ -130,17 +130,15 @@ class StaticChecker(BaseVisitor):
                 lst[1] = lst[1] + [len(lst[0])]
                 lst[2] = lst[2] + [Symbol(decl.name.name, MType([y.typ for y in decl.param], VoidType()))]
                 self.visit(decl, lst)
-
         return 0
 
     def visitVarDecl(self, ast, c):
         start = c[1][-1] # Get index of current scope to travel in symbol list
         end = len(c[0])
-
         if self.lookup(ast.variable.name, c[0][start:end], lambda x: x.name) is not None:
             raise Redeclared(Variable(), ast.variable.name)
 
-        return Symbol(ast.variable.name, ast.typ)
+        return Symbol(ast.variable.name, MType([], ast.typ))
 
     def visitConstDecl(self, ast, c):
         start = c[1][-1] # Get index of current scope to travel in symbol list
@@ -149,7 +147,7 @@ class StaticChecker(BaseVisitor):
         if self.lookup(ast.constant.name, c[0][start:end], lambda x: x.name) is not None:
             raise Redeclared(Constant(), ast.constant.name)
 
-        return Symbol(ast.constant.name, ast.typ)
+        return Symbol(ast.constant.name, MType([], ast.typ))
 
     def visitFuncDecl(self, ast, c):
         param_list = []
@@ -169,11 +167,13 @@ class StaticChecker(BaseVisitor):
         # Visit function body
         inLoop = c[3][0]
         for inst in ast.body:
-            self.isContinueandBreakInLoop(ast.member,inLoop)
+            # self.isContinueandBreakInLoop(ast.member,inLoop)
             # isContinueandBreakInLoop is False if it do not raise exception
-
             if type(inst) is VarDecl:
                 c[0] = c[0] + [self.visit(inst, c)]
+            elif type(inst) is Assign:
+                self.visit(inst, c)
+                print(c[0][4])
             elif type(inst) is Return:
                 self.visit(inst, c)
             elif type(inst) is If:
@@ -191,13 +191,13 @@ class StaticChecker(BaseVisitor):
             c[0].pop()
         c[1].pop()
 
-    def isContinueandBreakInLoop(self,lst,inLoop):
-        if inLoop == False: 
-            if self.lookup(Break, lst, lambda x: type(x)) is not None:
-                raise BreakNotInLoop()
-            if self.lookup(Continue, lst, lambda x: type(x)) is not None:
-                raise ContinueNotInLoop()
-        return False
+    # def isContinueandBreakInLoop(self,lst,inLoop):
+    #     if inLoop == False: 
+    #         if self.lookup(Break, lst, lambda x: type(x)) is not None:
+    #             raise BreakNotInLoop()
+    #         if self.lookup(Continue, lst, lambda x: type(x)) is not None:
+    #             raise ContinueNotInLoop()
+    #     return False
 
     def visitBinaryOp(self, ast, c):
         return None
@@ -211,13 +211,49 @@ class StaticChecker(BaseVisitor):
     def visitId(self, ast, c):
         return None
 
+
     def visitArrayAccess(self, ast, c):
-        return None
+        for x in ast.idx:
+            typ = self.visit(x, c)
+            if typ != NumberType():
+                raise TypeMismatchInExpression(ast)
+        print("asdasd")
+        return ast.arr.name
+
 
     def visitJSONAccess(self, ast, c):
-        return None
+        for x in ast.idx:
+            typ = self.visit(x, c)
+            if typ != StringType():
+                raise TypeMismatchInExpression(ast)
+    
+        return ast.json.name
+
 
     def visitAssign(self, ast, c):
+        if type(ast.lhs) is Id:
+            symbol = self.lookup(ast.lhs.name, c[0], lambda x: x.name) 
+            if symbol is None:
+                raise Undeclared(Variable(), ast.lhs.name)
+
+        if type(ast.lhs) is ArrayAccess:
+            id_arr = self.visit(ast.lhs, c)
+            symbol = self.lookup(id_arr, c[0], lambda x: x.name) 
+            if symbol is None:
+                raise Undeclared(Variable(), ast.lhs.name)
+
+        if type(ast.lhs) is JSONAccess:
+            id_arr = self.visit(ast.json, c)
+            symbol = self.lookup(id_arr, c[0], lambda x: x.name) 
+            if symbol is None:
+                raise Undeclared(Variable(), ast.lhs.name)
+
+        rhs_type = self.visit(ast.rhs, c)
+        if symbol.mtype.restype == VoidType():
+            raise TypeMismatchInStatement(ast)
+        elif symbol.mtype.restype!= rhs_type:
+            raise TypeMismatchInStatement(ast)
+
         return None
 
     def visitIf(self, ast, c):
@@ -245,7 +281,7 @@ class StaticChecker(BaseVisitor):
         return None
 
     def visitNumberLiteral(self, ast, c):
-        return None
+        return NumberType()
 
     def visitBooleanLiteral(self, ast, c):
         return None

@@ -83,10 +83,6 @@ class Visitor(ABC):
         pass
 
     @abstractmethod
-    def visitIntLiteral(self, ast, param):
-        pass
-
-    @abstractmethod
     def visitNumberLiteral(self, ast, param):
         pass
 

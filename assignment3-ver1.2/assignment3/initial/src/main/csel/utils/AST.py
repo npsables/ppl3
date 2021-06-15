@@ -245,7 +245,7 @@ class NumberLiteral(Literal):
         return "NumberLiteral(" + str(self.value) + ")"
 
     def accept(self, v, param):
-        return v.visitIntLiteral(self, param)
+        return v.visitNumberLiteral(self, param)
 
 
 @dataclass

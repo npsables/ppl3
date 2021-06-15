@@ -1,0 +1,3 @@
+
+        Function main(){Let a["a"]: Number = ["a", 2, 3, 4, 5];}
+        
