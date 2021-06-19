@@ -1,0 +1,1 @@
+Type Cannot Be Inferred: Assign(ArrayAccess(Id(a),[NumberLiteral(4.0)]),ArrayLiteral(NumberLiteral(1.0),NumberLiteral(2.0),NumberLiteral(3.0),NumberLiteral(4.0),NumberLiteral(5.0)))

@@ -122,14 +122,14 @@ class CheckSuite(unittest.TestCase):
     #     input = """
     #     Let a; Function main(){Let a; Let b;}
     #     """
-    #     expect = str(Redeclared(Variable(), "a"))
+    #     expect = ""
     #     self.assertTrue(TestChecker.test(input, expect, 15))
     
     # def test_func_redeclared_16(self):
     #     input = """
     #     Function main(){Let a; a = 1;}
     #     """
-    #     expect = ""
+    #     expect = "Type Cannot Be Inferred: Assign(Id(a),NumberLiteral(1.0))"
     #     self.assertTrue(TestChecker.test(input, expect, 16))
     
     # def test_func_redeclared_17(self):
@@ -139,9 +139,93 @@ class CheckSuite(unittest.TestCase):
     #     expect = ""
     #     self.assertTrue(TestChecker.test(input, expect, 17))
 
-    def test_func_redeclared_17(self):
+    # def test_func_redeclared_18(self):
+    #     input = """
+    #     Function main(){Let a[5]; a[4] = [1, 2, 3, 4, 5];}
+    #     """
+    #     expect = "Type Cannot Be Inferred: Assign(ArrayAccess(Id(a),[NumberLiteral(4.0)]),ArrayLiteral(NumberLiteral(1.0),NumberLiteral(2.0),NumberLiteral(3.0),NumberLiteral(4.0),NumberLiteral(5.0)))"
+    #     self.assertTrue(TestChecker.test(input, expect, 18))
+
+    # def test_func_redeclared_20(self):
+    #     input = """
+    #     Function main(){Let a[5]: Number; a[4] = 1;}
+    #     """
+    #     expect = ""
+    #     self.assertTrue(TestChecker.test(input, expect, 20))
+    
+    # def test_func_redeclared_19(self):
+    #     input = """
+    #     Function main(){Let a[5]: Number; a[4] = "abc";}
+    #     """
+    #     expect = "Type Mismatch In Statement: Assign(ArrayAccess(Id(a),[NumberLiteral(4.0)]),StringLiteral(abc))"
+    #     self.assertTrue(TestChecker.test(input, expect, 19))
+
+    # def test_func_redeclared_21(self):
+    #     input = """
+    #     Function main(){Let a[5]: Number; a["a"] = "abc";}
+    #     """
+    #     expect = "Type Mismatch In Expression: ArrayAccess(Id(a),[StringLiteral(a)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 21))
+
+    # def test_func_redeclared_22(self):
+    #     input = """
+    #     Function main(){Let a =1;}
+    #     """
+    #     expect = ""
+    #     self.assertTrue(TestChecker.test(input, expect, 22))
+
+    # def test_func_redeclared_23(self):
+    #     input = """
+    #     Function main(){Let a:String =1;}
+    #     """
+    #     expect = "Type Mismatch In Statement: VarDecl(Id(a),StringType,NumberLiteral(1.0))"
+    #     self.assertTrue(TestChecker.test(input, expect, 23))
+
+    # def test_func_redeclared_24(self):
+    #     input = """
+    #     Function main(){Let a;}
+    #     """
+    #     expect = ""
+    #     self.assertTrue(TestChecker.test(input, expect, 24))
+    
+    # def test_func_redeclared_25(self):
+    #     input = """
+    #     Function main(){Let a:Number ="ass";}
+    #     """
+    #     expect = "Type Mismatch In Statement: VarDecl(Id(a),NumberType,StringLiteral(ass))"
+    #     self.assertTrue(TestChecker.test(input, expect, 25))
+
+    # def test_func_redeclared_26(self):
+    #     input = """
+    #     Function main(){Let a:Number; a = 1+2;}
+    #     """
+    #     expect = ""
+    #     self.assertTrue(TestChecker.test(input, expect, 26))
+    
+    def test_func_redeclared_27(self):
         input = """
-        Function main(){Let a[5]: Number = [1, 2, 3, 4, 5];}
+        Function main(){Let a:String; a = "2" +. "1";}
         """
         expect = ""
-        self.assertTrue(TestChecker.test(input, expect, 17))
+        self.assertTrue(TestChecker.test(input, expect, 27))
+    
+    def test_func_redeclared_28(self):
+        input = """
+        Function main(){Let a:Number; a = 1 - 2;}
+        """
+        expect = ""
+        self.assertTrue(TestChecker.test(input, expect, 28))
+
+    def test_func_redeclared_29(self):
+        input = """
+        Function main(){Let a:Boolean; a = True && False;}
+        """
+        expect = ""
+        self.assertTrue(TestChecker.test(input, expect, 29))
+
+    def test_func_redeclared_30(self):
+        input = """
+        Function main(){Let a:Number; a = 1+"2";}
+        """
+        expect = "Type Mismatch In Expression: BinaryOp(+,NumberLiteral(1.0),StringLiteral(2))"
+        self.assertTrue(TestChecker.test(input, expect, 30))

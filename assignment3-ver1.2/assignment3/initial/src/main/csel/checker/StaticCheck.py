@@ -11,27 +11,6 @@ class Type(ABC):
     __metaclass__ = ABCMeta
     pass
 
-
-class Prim(Type):
-    __metaclass__ = ABCMeta
-    pass
-
-
-class NumberType(Prim):
-    
-    def __str__(self):
-        return "NumberType"
-
-class StringType(Prim):
-    
-    def __str__(self):
-        return "StringType"
-
-class BoolType(Prim):
-    
-    def __str__(self):
-        return "BoolType"
-
 class VoidType(Type):
     
     def __str__(self):
@@ -105,7 +84,7 @@ class StaticChecker(BaseVisitor):
 
         lst[0] = [] + c # add global_envi to symbol list for checking redeclare
 
-
+        #TODO: VOID_TYPE!!!!
         # Check redeclare (function, variable, constant)
         for decl in ast.decl:
             if type(decl) is VarDecl:
@@ -135,10 +114,20 @@ class StaticChecker(BaseVisitor):
     def visitVarDecl(self, ast, c):
         start = c[1][-1] # Get index of current scope to travel in symbol list
         end = len(c[0])
+        tmp = ast.typ
         if self.lookup(ast.variable.name, c[0][start:end], lambda x: x.name) is not None:
             raise Redeclared(Variable(), ast.variable.name)
 
-        return Symbol(ast.variable.name, MType([], ast.typ))
+        typ_init = self.visit(ast.varInit, c) if ast.varInit is not None else None
+        if typ_init is None:
+            return Symbol(ast.variable.name, MType([], ast.typ))
+        else: 
+            if type(ast.typ) is NoneType:
+                tmp = typ_init
+            elif type(ast.typ) is not type(typ_init):
+                raise TypeMismatchInStatement(ast)
+
+        return Symbol(ast.variable.name, MType([], tmp))
 
     def visitConstDecl(self, ast, c):
         start = c[1][-1] # Get index of current scope to travel in symbol list
@@ -173,7 +162,6 @@ class StaticChecker(BaseVisitor):
                 c[0] = c[0] + [self.visit(inst, c)]
             elif type(inst) is Assign:
                 self.visit(inst, c)
-                print(c[0][4])
             elif type(inst) is Return:
                 self.visit(inst, c)
             elif type(inst) is If:
@@ -200,81 +188,125 @@ class StaticChecker(BaseVisitor):
     #     return False
 
     def visitBinaryOp(self, ast, c):
-        return None
+        left = self.visit(ast.left, c)
+        right = self.visit(ast.right, c)
+        
+        if ast.op in ["+", "-", "*", "/", "%", "==", "!=", ">", ">=", "<", "<="]:
+            if type(left) is not NumberType or type(right) is not NumberType:
+                raise TypeMismatchInExpression(ast)
+            elif ast.op in ["+", "-", "*", "/", "%"]:
+                return NumberType()
+            elif ast.op in [ "==", "!=", ">", ">=", "<", "<="]:
+                return BooleanType()
+        
+        elif ast.op in ["&&", "||"]:
+            if type(left) is not BooleanType or type(right) is not BooleanType:
+                raise TypeMismatchInExpression(ast)        
+            return BooleanType()
+        
+        elif ast.op in ["+.", "==."]:
+            if type(left) is not StringType or type(right) is not StringType:
+                raise TypeMismatchInExpression(ast) 
+            return StringType()
+
 
     def visitUnaryOp(self, ast, c):
-        return None
+        body = self.visit(ast.body, c)
+        if ast.op == '-':
+            if type(body) is not NumberType:
+                raise TypeMismatchInExpression(ast)
+            else:
+                return NumberType()
+        
+        elif ast.op == '!':
+            if type(body) is not BooleanType:
+                raise TypeMismatchInExpression(ast)
+            else:
+                return BooleanType()
+    
 
     def visitCallExpr(self, ast, c):
         return None
 
     def visitId(self, ast, c):
-        return None
-
+        symbol = self.lookup(ast.name, c[0], lambda x: x.name) 
+        if symbol is None:
+            raise Undeclared(Identifier(), ast.name)
+        return symbol.mtype.restype
+        
 
     def visitArrayAccess(self, ast, c):
+        arr = self.visit(ast.arr, c)
         for x in ast.idx:
             typ = self.visit(x, c)
-            if typ != NumberType():
+            if type(typ) is not NumberType:
                 raise TypeMismatchInExpression(ast)
-        print("asdasd")
-        return ast.arr.name
+                
+        return arr
 
 
     def visitJSONAccess(self, ast, c):
         for x in ast.idx:
             typ = self.visit(x, c)
-            if typ != StringType():
+            if type(typ) is not StringType:
                 raise TypeMismatchInExpression(ast)
-    
         return ast.json.name
 
 
     def visitAssign(self, ast, c):
-        if type(ast.lhs) is Id:
-            symbol = self.lookup(ast.lhs.name, c[0], lambda x: x.name) 
-            if symbol is None:
-                raise Undeclared(Variable(), ast.lhs.name)
-
-        if type(ast.lhs) is ArrayAccess:
-            id_arr = self.visit(ast.lhs, c)
-            symbol = self.lookup(id_arr, c[0], lambda x: x.name) 
-            if symbol is None:
-                raise Undeclared(Variable(), ast.lhs.name)
-
-        if type(ast.lhs) is JSONAccess:
-            id_arr = self.visit(ast.json, c)
-            symbol = self.lookup(id_arr, c[0], lambda x: x.name) 
-            if symbol is None:
-                raise Undeclared(Variable(), ast.lhs.name)
+        mtype = self.visit(ast.lhs,c) 
+        
+        if type(mtype) is NoneType:
+            raise TypeCannotBeInferred(ast)
 
         rhs_type = self.visit(ast.rhs, c)
-        if symbol.mtype.restype == VoidType():
+        # print(type(symbol.mtype.restype), type(rhs_type))
+        if type(mtype) is VoidType:
             raise TypeMismatchInStatement(ast)
-        elif symbol.mtype.restype!= rhs_type:
+        
+        elif type(mtype) is not type(rhs_type):
             raise TypeMismatchInStatement(ast)
 
         return None
 
     def visitIf(self, ast, c):
+        """
+            [  (exp, [ {}, {} ])   ]
+        """
+        for x in ast.ifthenStmt:
+            exp_typ = self.visit(x[0],c)
+            if type(exp_typ) is not BooleanType():
+                raise TypeMismatchInStatement(ast)
+            for inst in x[1]:
+                self.visit(inst, c)
+        
+        for x in elseStmt:
+            self.visit(x, c)
+
         return None
 
-    def visitFor(self, ast, c):
+    def visitForIn(self, ast, c):
+        # id_typ = self.visit(ast.idx1)
         return None
 
     def visitContinue(self, ast, c):
-        return None
+        return Continue()
 
     def visitBreak(self, ast, c):
-        return None
+        return Break()
 
     def visitReturn(self, ast, c):
+
         return None
 
     def visitDowhile(self, ast, c):
         return None
 
     def visitWhile(self, ast, c):
+        exp_type =  self.visit(ast.exp, c)
+        if type(exp_type) is not BooleanType():
+            raise TypeMismatchInStatement(ast)
+        
         return None
 
     def visitCallStmt(self, ast, c):
@@ -284,13 +316,20 @@ class StaticChecker(BaseVisitor):
         return NumberType()
 
     def visitBooleanLiteral(self, ast, c):
-        return None
+        return BooleanType()
 
     def visitStringLiteral(self, ast, c):
-        return None
+        return StringType()
 
     def visitArrayLiteral(self, ast, c):
+        # first = self.visit(ast.value[0], c)
+        # for x in ast.value[1:]:
+        #     typ = self.visit(x, c)
+        #     if typ != first:
+        #         raise InvalidArrayLiteral(x)
+        # return typ
         return None
 
     def visitJSONLiteral(self, ast, c):
+
         return None

@@ -1,0 +1,3 @@
+
+        Function main(){Let a:String; a = "2" +. "1";}
+        
